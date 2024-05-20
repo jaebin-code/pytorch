@@ -1,0 +1,224 @@
+Accuracy of the network on the test images: 18.55%
+Accuracy of the network on the test images: 23.93%
+Accuracy of the network on the test images: 33.49%
+Accuracy of the network on the test images: 37.69%
+Accuracy of the network on the test images: 43.26%
+Accuracy of the network on the test images: 45.96%
+Accuracy of the network on the test images: 49.14%
+Accuracy of the network on the test images: 51.20%
+Accuracy of the network on the test images: 52.73%
+Accuracy of the network on the test images: 52.42%
+Accuracy of the network on the test images: 52.48%
+Accuracy of the network on the test images: 52.84%
+Accuracy of the network on the test images: 52.87%
+Accuracy of the network on the test images: 52.97%
+Accuracy of the network on the test images: 53.28%
+[1, 1] loss: 2.305
+[1, 2] loss: 2.304
+[1, 3] loss: 2.306
+[1, 4] loss: 2.304
+[1, 5] loss: 2.302
+[1, 6] loss: 2.302
+[1, 7] loss: 2.303
+[1, 8] loss: 2.300
+[1, 9] loss: 2.301
+[1, 10] loss: 2.301
+[1, 11] loss: 2.301
+[1, 12] loss: 2.299
+[1, 13] loss: 2.299
+[1, 14] loss: 2.298
+[1, 15] loss: 2.296
+[1, 16] loss: 2.295
+[1, 17] loss: 2.293
+[1, 18] loss: 2.291
+[1, 19] loss: 2.289
+[1, 20] loss: 2.285
+[1, 21] loss: 2.280
+[1, 22] loss: 2.271
+[1, 23] loss: 2.263
+[1, 24] loss: 2.251
+[1, 25] loss: 2.245
+Accuracy of the network on the test images: 16.99%
+[2, 1] loss: 2.238
+[2, 2] loss: 2.230
+[2, 3] loss: 2.216
+[2, 4] loss: 2.181
+[2, 5] loss: 2.185
+[2, 6] loss: 2.148
+[2, 7] loss: 2.150
+[2, 8] loss: 2.128
+[2, 9] loss: 2.113
+[2, 10] loss: 2.101
+[2, 11] loss: 2.076
+[2, 12] loss: 2.093
+[2, 13] loss: 2.063
+[2, 14] loss: 2.074
+[2, 15] loss: 2.040
+[2, 16] loss: 2.051
+[2, 17] loss: 2.029
+[2, 18] loss: 2.024
+[2, 19] loss: 2.024
+[2, 20] loss: 1.998
+[2, 21] loss: 1.989
+[2, 22] loss: 2.004
+[2, 23] loss: 2.018
+[2, 24] loss: 1.998
+[2, 25] loss: 1.971
+Accuracy of the network on the test images: 28.82%
+[3, 1] loss: 1.954
+[3, 2] loss: 1.956
+[3, 3] loss: 1.975
+[3, 4] loss: 1.972
+[3, 5] loss: 1.949
+[3, 6] loss: 1.982
+[3, 7] loss: 1.936
+[3, 8] loss: 1.954
+[3, 9] loss: 1.924
+[3, 10] loss: 1.922
+[3, 11] loss: 1.903
+[3, 12] loss: 1.895
+[3, 13] loss: 1.896
+[3, 14] loss: 1.885
+[3, 15] loss: 1.907
+[3, 16] loss: 1.872
+[3, 17] loss: 1.886
+[3, 18] loss: 1.846
+[3, 19] loss: 1.885
+[3, 20] loss: 1.838
+[3, 21] loss: 1.779
+[3, 22] loss: 1.845
+[3, 23] loss: 1.819
+[3, 24] loss: 1.804
+[3, 25] loss: 1.818
+Accuracy of the network on the test images: 35.63%
+[4, 1] loss: 1.810
+[4, 2] loss: 1.786
+[4, 3] loss: 1.776
+[4, 4] loss: 1.762
+[4, 5] loss: 1.739
+[4, 6] loss: 1.740
+[4, 7] loss: 1.715
+[4, 8] loss: 1.695
+[4, 9] loss: 1.797
+[4, 10] loss: 1.842
+[4, 11] loss: 2.124
+[4, 12] loss: 1.970
+[4, 13] loss: 1.989
+[4, 14] loss: 1.952
+[4, 15] loss: 1.953
+[4, 16] loss: 1.957
+[4, 17] loss: 1.918
+[4, 18] loss: 1.920
+[4, 19] loss: 1.867
+[4, 20] loss: 1.876
+[4, 21] loss: 1.846
+[4, 22] loss: 1.828
+[4, 23] loss: 1.809
+[4, 24] loss: 1.792
+[4, 25] loss: 1.787
+Accuracy of the network on the test images: 36.81%
+[5, 1] loss: 1.796
+[5, 2] loss: 1.753
+[5, 3] loss: 1.737
+[5, 4] loss: 1.759
+[5, 5] loss: 1.729
+[5, 6] loss: 1.736
+[5, 7] loss: 1.751
+[5, 8] loss: 1.705
+[5, 9] loss: 1.768
+[5, 10] loss: 1.698
+[5, 11] loss: 1.734
+[5, 12] loss: 1.746
+[5, 13] loss: 1.777
+[5, 14] loss: 1.670
+[5, 15] loss: 1.711
+[5, 16] loss: 1.696
+[5, 17] loss: 1.716
+[5, 18] loss: 1.702
+[5, 19] loss: 1.700
+[5, 20] loss: 1.679
+[5, 21] loss: 1.686
+[5, 22] loss: 1.671
+[5, 23] loss: 1.692
+[5, 24] loss: 1.662
+[5, 25] loss: 1.681
+Accuracy of the network on the test images: 40.24%
+[6, 1] loss: 1.664
+[6, 2] loss: 1.668
+[6, 3] loss: 1.697
+[6, 4] loss: 1.678
+[6, 5] loss: 1.653
+[6, 6] loss: 1.648
+[6, 7] loss: 1.697
+[6, 8] loss: 1.662
+[6, 9] loss: 1.677
+[6, 10] loss: 1.654
+[6, 11] loss: 1.653
+[6, 12] loss: 1.656
+[6, 13] loss: 1.660
+[6, 14] loss: 1.667
+[6, 15] loss: 1.693
+[6, 16] loss: 1.636
+[6, 17] loss: 1.652
+[6, 18] loss: 1.680
+[6, 19] loss: 1.673
+[6, 20] loss: 1.664
+[6, 21] loss: 1.650
+[6, 22] loss: 1.701
+[6, 23] loss: 1.631
+[6, 24] loss: 1.675
+[6, 25] loss: 1.624
+Accuracy of the network on the test images: 41.00%
+[7, 1] loss: 1.665
+[7, 2] loss: 1.652
+[7, 3] loss: 1.613
+[7, 4] loss: 1.664
+[7, 5] loss: 1.645
+[7, 6] loss: 1.653
+[7, 7] loss: 1.662
+[7, 8] loss: 1.611
+[7, 9] loss: 1.669
+[7, 10] loss: 1.613
+[7, 11] loss: 1.643
+[7, 12] loss: 1.666
+[7, 13] loss: 1.673
+[7, 14] loss: 1.642
+[7, 15] loss: 1.651
+[7, 16] loss: 1.633
+[7, 17] loss: 1.662
+[7, 18] loss: 1.661
+[7, 19] loss: 1.610
+[7, 20] loss: 1.640
+[7, 21] loss: 1.660
+[7, 22] loss: 1.660
+[7, 23] loss: 1.644
+[7, 24] loss: 1.591
+[7, 25] loss: 1.661
+Accuracy of the network on the test images: 41.35%
+[8, 1] loss: 1.658
+[8, 2] loss: 1.662
+[8, 3] loss: 1.637
+[8, 4] loss: 1.622
+[8, 5] loss: 1.628
+[8, 6] loss: 1.636
+[8, 7] loss: 1.648
+[8, 8] loss: 1.662
+[8, 9] loss: 1.628
+[8, 10] loss: 1.654
+[8, 11] loss: 1.682
+[8, 12] loss: 1.637
+[8, 13] loss: 1.649
+[8, 14] loss: 1.641
+[8, 15] loss: 1.634
+[8, 16] loss: 1.646
+[8, 17] loss: 1.637
+[8, 18] loss: 1.657
+[8, 19] loss: 1.651
+[8, 20] loss: 1.605
+[8, 21] loss: 1.635
+[8, 22] loss: 1.632
+[8, 23] loss: 1.636
+[8, 24] loss: 1.658
+[8, 25] loss: 1.615
+Accuracy of the network on the test images: 41.47%
+Finished Training
