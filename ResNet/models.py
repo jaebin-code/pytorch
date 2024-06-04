@@ -77,7 +77,7 @@ class BasicBlock(nn.Module):
                 nn.BatchNorm2d(out_channel)
             )
     def forward(self, x):
-        return nn.ReLU(self.seq(x) + self.shortcut(x))
+        return F.relu(self.seq(x) + self.shortcut(x))
 
 
 

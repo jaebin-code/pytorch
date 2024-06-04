@@ -1,4 +1,6 @@
 LeNet5/data/
 LeNet5/logs/
+LeNet5/__pyache__
 ResNet/data/
-Resnet/logs/
+ResNet/logs/
+ResNet/__pyache__

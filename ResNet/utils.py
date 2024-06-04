@@ -20,3 +20,4 @@ def setup_logger(logdir):
     writer = SummaryWriter(logdir)
 
     return logger, writer
+
