@@ -121,8 +121,59 @@ class ViT(nn.Module):
 
         return x
 
+class PatchEmbedding_no_CLS(nn.Module):
+    def __init__(self, width, height, patch_size, in_channels, hidden_channels):
+        super(PatchEmbedding, self).__init__()
+        self.width = width
+        self.height = height
+        self.patch_size = patch_size
+        self.in_channels = in_channels
+        self.hidden_channels = hidden_channels
+
+        if height % patch_size != 0 or width % patch_size != 0:
+            raise ValueError("The image size must be a multiple of the patch size.")
+
+        self.patch_num = (width // patch_size) * (height // patch_size)
+
+        self.linear = nn.Conv2d(in_channels=in_channels, out_channels=hidden_channels, kernel_size=patch_size, stride=patch_size)
+
+        # 클래스 토큰 제거
+        self.pos_embed = nn.Parameter(torch.randn(1, self.patch_num, hidden_channels))
+
+    def forward(self, x):
+        x = self.linear(x)  # (batch_size, hidden_channels, num_width, num_height)
+        x = x.flatten(2)  # (batch_size, hidden_channels, num_patches)
+        x = x.transpose(1, 2)  # (batch_size, num_patches, hidden_channels)
+
+        x += self.pos_embed  # 포지셔널 인코딩은 배치 상관없이 하나로
+
+        return x
+
+class ViT_no_CLS(nn.Module):
+    def __init__(self, img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth):
+        super(ViT, self).__init__()
+        self.patch_embed = PatchEmbedding(img_size, img_size, patch_size, in_channels, hidden_size)
+
+        self.attention_blocks = nn.Sequential(
+            *[AttentionBlock(num_heads, hidden_size, mlp_dim) for _ in range(depth)]
+        )
+
+        self.norm = nn.LayerNorm(hidden_size)
+        self.head = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        x = self.patch_embed(x)
+        x = self.attention_blocks(x)
+        x = self.norm(x.mean(dim=1))
+        x = self.head(x)
+
+        return x
+
+
 def get_model(name, img_size=32, patch_size=4, in_channels=3, num_classes=10, hidden_size=384, num_heads=6, mlp_dim=3072, depth=8):
     if name == "ViT":
         return ViT(img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth)
+    elif name == "ViT_no_CLS":
+        return ViT_no_CLS(img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth)
     else:
         raise ValueError("Unsupported Model")
