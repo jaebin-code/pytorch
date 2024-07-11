@@ -4,3 +4,6 @@ LeNet5/__pycache__
 ResNet/data/
 ResNet/logs/
 ResNet/__pycache__
+ViT/data/
+ViT/logs/
+ViT/__pycache__

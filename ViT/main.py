@@ -12,7 +12,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--dataset', type=str, required=True, choices=['CIFAR10', 'CIFAR100', 'SVHN'])
-    parser.add_argument('--model', type=str, default='ViT', choices=['ViT', 'ViT_no_CLS'])
+    parser.add_argument('--model', type=str, default='ViT', choices=['ViT', 'ViT_no_CLS', 'ViT_no_CLS_POS'])
     parser.add_argument('--img_size', type=int, default=32)
     parser.add_argument('--patch_size', type=int, default=4)
     parser.add_argument('--in_channels', type=int, default=3)
@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--wd', type=float, default=1e-2)
     parser.add_argument('--logdir', type=str, default='./logs')
 
 
