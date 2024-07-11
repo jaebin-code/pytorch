@@ -25,7 +25,7 @@ class PatchEmbedding(nn.Module):
         x = x.flatten(2)  # (batch_size, hidden_channels, num_patches)
         x = x.transpose(1, 2)  # (batch_size, num_patches, hidden_channels)
 
-        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)  # batch_size만큼 확장
+        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)  # batch_size만큼 확장 (안해도 아래 포지셔닝 인코딩처럼 브로드캐스팅해도 됨)
         x = torch.cat((cls_tokens, x), dim=1)
 
         x += self.pos_embed  # 포지셔널 인코딩은 배치 상관없이 하나로
