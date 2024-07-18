@@ -7,3 +7,6 @@ ResNet/__pycache__
 ViT/data/
 ViT/logs/
 ViT/__pycache__
+RoTNet/data/
+RoTNet/logs/
+RoTNet/__pycache__
