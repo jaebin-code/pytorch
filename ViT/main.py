@@ -11,15 +11,15 @@ from utils import setup_logger
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--dataset', type=str, required=True, choices=['CIFAR10', 'CIFAR100', 'SVHN'])
-    parser.add_argument('--model', type=str, default='ViT', choices=['ViT', 'ViT_no_CLS', 'ViT_no_CLS_POS'])
+    parser.add_argument('--dataset', type=str, required=True, choices=['CIFAR10', 'CIFAR100', 'SVHN', 'STL10'])
+    parser.add_argument('--model', type=str, default='ViT', choices=['ViT', 'ViT_no_CLS', 'ViT_no_POS', 'ViT_no_CLS_POS'])
     parser.add_argument('--img_size', type=int, default=32)
     parser.add_argument('--patch_size', type=int, default=4)
     parser.add_argument('--in_channels', type=int, default=3)
     parser.add_argument('--num_classes', type=int, default=10)
     parser.add_argument('--hidden_size', type=int, default=384)
     parser.add_argument('--num_heads', type=int, default=6)
-    parser.add_argument('--mlp_dim', type=int, default=3072)
+    parser.add_argument('--mlp_dim', type=int, default=1536)
     parser.add_argument('--depth', type=int, default=8)
 
     parser.add_argument('--batch_size', type=int, default=64)
@@ -50,8 +50,8 @@ def main():
 
     model.to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[int(args.epochs * 0.5), int(args.epochs * 0.75)], gamma=0.1)
+    optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
     for epoch in range(args.epochs):
         model.train()

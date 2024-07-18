@@ -25,7 +25,7 @@ class PatchEmbedding(nn.Module):
         x = x.flatten(2)  # (batch_size, hidden_channels, num_patches)
         x = x.transpose(1, 2)  # (batch_size, num_patches, hidden_channels)
 
-        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)  # batch_size만큼 확장 (안해도 아래 포지셔닝 인코딩처럼 브로드캐스팅해도 됨)
+        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)  # batch_size만큼 확장
         x = torch.cat((cls_tokens, x), dim=1)
 
         x += self.pos_embed  # 포지셔널 인코딩은 배치 상관없이 하나로
@@ -46,6 +46,7 @@ class MultiAttention(nn.Module):
         self.key = nn.Linear(hidden_size, hidden_size)
         self.query = nn.Linear(hidden_size, hidden_size)
         self.value = nn.Linear(hidden_size, hidden_size)
+        self.out = nn.Linear(hidden_size, hidden_size)
 
     def forward(self, x):
         # (batch_size, num_patches, hidden_channels)
@@ -72,7 +73,9 @@ class MultiAttention(nn.Module):
         result_matrix = torch.matmul(attention_matrix, value)
 
         # (batch_size, num_patches, hidden_channels)로 다시 복구
-        out = result_matrix.transpose(1, 2).contiguous().view(batch_size, num_patches, hidden_channels)
+        result_matrix = result_matrix.transpose(1, 2).contiguous().view(batch_size, num_patches, hidden_channels)
+
+        out = self.out(result_matrix)
 
         return out
 
@@ -123,7 +126,7 @@ class ViT(nn.Module):
 
 class PatchEmbedding_no_CLS(nn.Module):
     def __init__(self, width, height, patch_size, in_channels, hidden_channels):
-        super(PatchEmbedding, self).__init__()
+        super(PatchEmbedding_no_CLS, self).__init__()
         self.width = width
         self.height = height
         self.patch_size = patch_size
@@ -151,8 +154,57 @@ class PatchEmbedding_no_CLS(nn.Module):
 
 class ViT_no_CLS(nn.Module):
     def __init__(self, img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth):
-        super(ViT, self).__init__()
+        super(ViT_no_CLS, self).__init__()
         self.patch_embed = PatchEmbedding_no_CLS(img_size, img_size, patch_size, in_channels, hidden_size)
+
+        self.attention_blocks = nn.Sequential(
+            *[AttentionBlock(num_heads, hidden_size, mlp_dim) for _ in range(depth)]
+        )
+
+        self.norm = nn.LayerNorm(hidden_size)
+        self.head = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        x = self.patch_embed(x)
+        x = self.attention_blocks(x)
+        x = self.norm(x.mean(dim=1))
+        x = self.head(x)
+
+        return x
+
+class PatchEmbedding_no_POS(nn.Module):
+    def __init__(self, width, height, patch_size, in_channels, hidden_channels):
+        super(PatchEmbedding_no_CLS, self).__init__()
+        self.width = width
+        self.height = height
+        self.patch_size = patch_size
+        self.in_channels = in_channels
+        self.hidden_channels = hidden_channels
+
+        if height % patch_size != 0 or width % patch_size != 0:
+            raise ValueError("The image size must be a multiple of the patch size.")
+
+        self.patch_num = (width // patch_size) * (height // patch_size)
+
+        self.linear = nn.Conv2d(in_channels=in_channels, out_channels=hidden_channels, kernel_size=patch_size, stride=patch_size)
+
+        # 포지셔닝 임베딩 제거
+        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)  # batch_size만큼 확장
+        x = torch.cat((cls_tokens, x), dim=1)
+
+    def forward(self, x):
+        x = self.linear(x)  # (batch_size, hidden_channels, num_width, num_height)
+        x = x.flatten(2)  # (batch_size, hidden_channels, num_patches)
+        x = x.transpose(1, 2)  # (batch_size, num_patches, hidden_channels)
+
+        x += self.pos_embed  # 포지셔널 인코딩은 배치 상관없이 하나로
+
+        return x
+
+class ViT_no_POS(nn.Module):
+    def __init__(self, img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth):
+        super(ViT_no_POS, self).__init__()
+        self.patch_embed = PatchEmbedding_no_POS(img_size, img_size, patch_size, in_channels, hidden_size)
 
         self.attention_blocks = nn.Sequential(
             *[AttentionBlock(num_heads, hidden_size, mlp_dim) for _ in range(depth)]
@@ -171,7 +223,7 @@ class ViT_no_CLS(nn.Module):
 
 class PatchEmbedding_no_CLS_POS(nn.Module):
     def __init__(self, width, height, patch_size, in_channels, hidden_channels):
-        super(PatchEmbedding, self).__init__()
+        super(PatchEmbedding_no_CLS_POS, self).__init__()
         self.width = width
         self.height = height
         self.patch_size = patch_size
@@ -196,7 +248,7 @@ class PatchEmbedding_no_CLS_POS(nn.Module):
 
 class ViT_no_CLS_POS(nn.Module):
     def __init__(self, img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth):
-        super(ViT, self).__init__()
+        super(ViT_no_CLS_POS, self).__init__()
         self.patch_embed = PatchEmbedding_no_CLS_POS(img_size, img_size, patch_size, in_channels, hidden_size)
 
         self.attention_blocks = nn.Sequential(
@@ -219,7 +271,10 @@ def get_model(name, img_size=32, patch_size=4, in_channels=3, num_classes=10, hi
         return ViT(img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth)
     elif name == "ViT_no_CLS":
         return ViT_no_CLS(img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth)
+    elif name == "ViT_no_POS":
+        return ViT_no_CLS(img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth)
     elif name == "ViT_no_CLS_POS":
         return ViT_no_CLS_POS(img_size, patch_size, in_channels, num_classes, hidden_size, num_heads, mlp_dim, depth)
     else:
         raise ValueError("Unsupported Model")
+
