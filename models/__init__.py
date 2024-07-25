@@ -1,4 +1,3 @@
-# from .ResNet import ResNet
 from .ViT import ViT
 from .ResNet import ResNet, Bottleneck
 

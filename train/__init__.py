@@ -1,5 +1,3 @@
-'''from .simclr import SimCLR  'RotNet', 'SimCLR', 'Supervised',
-from .supervised import Supervised'''
 from .data import RotNetDataset, get_cifar10_loaders, get_rot_cifar10_loaders
 from .utils import setup_logger, CIFAR10Classifier
 from .rot import train, rot_train, rotnet
