@@ -1,12 +1,4 @@
-LeNet5/data/
-LeNet5/logs/
-LeNet5/__pycache__
-ResNet/data/
-ResNet/logs/
-ResNet/__pycache__
-ViT/data/
-ViT/logs/
-ViT/__pycache__
-RoTNet/data/
-RoTNet/logs/
-RoTNet/__pycache__
+train/__pycache__
+models/__pycache__
+data/
+logs/
