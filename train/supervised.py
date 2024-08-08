@@ -1,17 +1,18 @@
 import torch.optim as optim
 import torch.nn as nn
-from train import get_cifar10_loaders
+import torch
+from train import get_datasets
 
-def supervised(model, device, epochs, batch_size, lr, logger, writer):
+def supervised(model, device, epochs, batch_size, lr, wd, momemtum, logger, writer, data_name):
+    train_loader, memory_loader, test_loader = get_datasets(data_name=data_name, train_method="Supervised", batch_size=batch_size)
 
-    trainloader, testloader = get_cifar10_loaders(batch_size)
-
-    optimizer = optim.Adam(model.classifier.parameters(), lr=lr)
+    optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     criterion = nn.CrossEntropyLoss()
 
     for epoch in range(epochs):
         running_loss = 0.0
-        for i, (inputs, labels) in enumerate(trainloader, 0):
+        for i, (inputs, labels) in enumerate(train_loader, 0):
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
 
@@ -23,13 +24,13 @@ def supervised(model, device, epochs, batch_size, lr, logger, writer):
             running_loss += loss.item()
             if (i + 1) % 100 == 0:
                 logger.info(f'[{epoch + 1}, {i + 1}] loss: {loss.item():.3f}')
-            writer.add_scalar('training loss', loss.item(), epoch * len(trainloader) + i)
+            writer.add_scalar('training loss', loss.item(), epoch * len(train_loader) + i)
 
         correct = 0
         total = 0
         model.eval()
         with torch.no_grad():
-            for inputs, labels in testloader:
+            for inputs, labels in test_loader:
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
@@ -38,3 +39,5 @@ def supervised(model, device, epochs, batch_size, lr, logger, writer):
         accuracy = 100 * correct / total
         logger.info(f'Accuracy of the network on the test images: {accuracy:.2f}%')
         writer.add_scalar('test accuracy', accuracy, epoch)
+
+        scheduler.step()

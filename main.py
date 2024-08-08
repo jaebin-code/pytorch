@@ -2,10 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+
 import argparse
 import os
 
-from train import rotnet, setup_logger, start_train
+from train import setup_logger, start_train
 from models import get_model
 
 def main():
@@ -13,7 +14,7 @@ def main():
 
     parser.add_argument('--dataset', type=str, required=True, choices=['CIFAR10', 'CIFAR100', 'SVHN', 'STL10'])
     parser.add_argument('--model', type=str, required=True, choices=['ViT', 'ResNet'])
-    parser.add_argument('--train', type=str, default='Supervised', choices=['RotNet', 'SimCLR', 'Supervised'])
+    parser.add_argument('--train', type=str, default='Supervised', choices=['RotNet', 'SimCLR', 'Supervised', 'MoCo'])
     parser.add_argument('--img_size', type=int, default=32)
     parser.add_argument('--patch_size', type=int, default=4)
     parser.add_argument('--in_channels', type=int, default=3)
@@ -22,6 +23,7 @@ def main():
     parser.add_argument('--num_heads', type=int, default=6)
     parser.add_argument('--mlp_dim', type=int, default=1536)
     parser.add_argument('--depth', type=int, default=8)
+    parser.add_argument('--temperature', type=float, default=0.5)
 
     parser.add_argument('--pretrain_epochs', type=int, default=50)
     parser.add_argument('--downstream_epochs', type=int, default=100)
@@ -37,10 +39,13 @@ def main():
     logdir = os.path.join(args.logdir, f'{args.model}_{args.dataset}_{args.train}')
     logger, writer = setup_logger(logdir)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1") #if torch.cuda.is_available() else "cpu")
 
     model = get_model(args.model).to(device)
-    start_train(args.train, device, logger=logger, writer=writer, model=model, pretrain_epochs=args.pretrain_epochs, epochs=args.epochs, batch_size=args.batch_size, lr=args.lr)
+    model_k = get_model(args.model).to(device)
+    start_train(args.train, device, logger=logger, writer=writer, model=model, num_classes=args.num_classes, pretrain_epochs=args.pretrain_epochs, epochs=args.epochs, batch_size=args.batch_size, lr=args.lr, data_name=args.dataset, temperature=args.temperature, model_k=model_k)
+
+    writer.close()
 
 if __name__ == "__main__":
     main()

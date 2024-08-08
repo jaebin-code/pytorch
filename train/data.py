@@ -1,58 +1,99 @@
+import torchvision
+from torchvision import transforms, datasets
 import torch
-from torchvision import datasets, transforms
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
-class RotNetDataset(Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
+def get_train_normalize_transform(dataset_name):
+    if dataset_name == "CIFAR10":
+        return transforms.Compose([
+            transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010]),
+            transforms.RandomResizedCrop(32, antialias=True),
+        ])
+    elif dataset_name == "CIFAR100":
+        return transforms.Normalize([0.5071, 0.4867, 0.4408], [0.2675, 0.2565, 0.2761])
+    else:
+        raise ValueError(f"Unsupported dataset: {dataset_name}")
 
-    def __len__(self):
-        return len(self.dataset)
+def get_test_normalize_transform(dataset_name):
+    if dataset_name == "CIFAR10":
+        return transforms.Compose([
+            transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010]),
+            transforms.Resize(32, antialias=True),
+        ])
+    elif dataset_name == "CIFAR100":
+        return transforms.Normalize([0.5071, 0.4867, 0.4408], [0.2675, 0.2565, 0.2761])
+    else:
+        raise ValueError(f"Unsupported dataset: {dataset_name}")
 
-    def __getitem__(self, idx):
-        img, _ = self.dataset[idx]
+def get_base_transform(train_method='Supervised'):
+    if train_method == 'Supervised' or train_method == 'RotNet':
+        return transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor()
+        ])
+    elif train_method == 'SimCLR' or train_method == 'MoCo':
+        return transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomApply([transforms.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.ToTensor()
+        ])
+    else:
+        return transforms.Compose([
+            transforms.ToTensor()
+        ])
 
-        # 원본 이미지와 90도, 180도, 270도 회전된 이미지를 생성
-        rot_0 = img
-        rot_90 = torch.rot90(img, k=1, dims=[1, 2])
-        rot_180 = torch.rot90(img, k=2, dims=[1, 2])
-        rot_270 = torch.rot90(img, k=3, dims=[1, 2])
 
-        # 4개의 이미지를 하나의 배치로 만듦
-        batch = torch.stack([rot_0, rot_90, rot_180, rot_270])
+class TwoCropTransform:
+    def __init__(self, base_transform, normalize_transform):
+        self.base_transform = base_transform
+        self.normalize_transform = normalize_transform
 
-        # 각 회전에 대한 라벨 (0, 1, 2, 3)
-        labels = torch.tensor([0, 1, 2, 3])
+    def __call__(self, x):
+        q = self.base_transform(x)
+        k = self.base_transform(x)
+        return [self.normalize_transform(q), self.normalize_transform(k)]
 
-        return batch, labels
+def rotate_batch(batch, batch_size):
+    # batch shape: (B, C, H, W)
+    B, C, H, W = batch.shape
 
-def get_rot_cifar10_loaders(batch_size=32):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+    # 4방향으로 회전된 이미지를 저장할 텐서
+    rotated_batch = torch.zeros(B * 4, C, H, W)
 
-    trainset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    testset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    # 각 회전된 배치를 한 번에 생성
+    rotated_batch[0::4] = batch  # 0도 회전
+    rotated_batch[1::4] = torch.rot90(batch, k=1, dims=(2, 3))  # 90도 회전
+    rotated_batch[2::4] = torch.rot90(batch, k=2, dims=(2, 3))  # 180도 회전
+    rotated_batch[3::4] = torch.rot90(batch, k=3, dims=(2, 3))  # 270도 회전
+    labels = torch.tensor([0, 1, 2, 3] * batch_size, device='cpu')
 
-    rotnet_trainset = RotNetDataset(trainset)
-    rotnet_testset = RotNetDataset(testset)
+    return rotated_batch, labels
 
-    trainloader = DataLoader(rotnet_trainset, batch_size=batch_size, shuffle=True, num_workers=2)
-    testloader = DataLoader(rotnet_testset, batch_size=batch_size, shuffle=False, num_workers=2)
 
-    return trainloader, testloader
+def get_datasets(data_name="CIFAR10", train_method="Supervised", batch_size=64):
+    if data_name not in ["CIFAR10", "CIFAR100"]:
+        raise ValueError(f"Unsupported dataset: {data_name}")
 
-def get_cifar10_loaders(batch_size=32):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+    normalize_transform = get_train_normalize_transform(data_name)
+    test_normalize_transform = get_test_normalize_transform(data_name)
+    train_base_transform = get_base_transform(train_method)
+    test_base_transform = get_base_transform(train_method='test')
 
-    trainset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    testset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    if train_method == 'SimCLR' or train_method == 'MoCo':
+        train_transform = TwoCropTransform(train_base_transform, normalize_transform)
+    else:
+        train_transform = transforms.Compose([train_base_transform, normalize_transform])
+    test_transform = transforms.Compose([test_base_transform, test_normalize_transform])
 
-    trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
+    dataset_class = getattr(torchvision.datasets, data_name)
 
-    return trainloader, testloader
+    train_dataset = dataset_class(root='./data', train=True, download=True, transform=train_transform)
+    memory_dataset = dataset_class(root='./data', train=True, download=True, transform=test_transform)
+    test_dataset = dataset_class(root='./data', train=False, download=True, transform=test_transform)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+    memory_loader = DataLoader(memory_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, memory_loader, test_loader
