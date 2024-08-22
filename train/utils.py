@@ -21,26 +21,6 @@ def setup_logger(logdir):
 
     return logger, writer
 
-class NT_Xent_loss(nn.Module):
-    def __init__(self, temperature):
-        super().__init__()
-        self.temperature = temperature
-
-    def forward(self, z_i, z_j):
-        N = z_i.shape[0]
-        z = torch.cat([z_i, z_j], dim=0)
-        sim = F.cosine_similarity(z.unsqueeze(1), z.unsqueeze(0), dim=2) / self.temperature
-        sim_ij = torch.diag(sim, N)
-        sim_ji = torch.diag(sim, -N)
-        positive_samples = torch.cat([sim_ij, sim_ji], dim=0)
-        mask = torch.ones_like(sim)
-        mask = mask.fill_diagonal_(0)
-        negative_samples = sim[mask.bool()].reshape(2*N, -1)
-        labels = torch.zeros(2*N).to(positive_samples.device).long()
-        logits = torch.cat([positive_samples.unsqueeze(1), negative_samples], dim=1)
-        loss = F.cross_entropy(logits, labels)
-        return loss
-
 def knn_accuracy(model, memory_data_loader, test_data_loader, device, k=5):
     model.eval()
     total_top1, total_num = 0.0, 0
@@ -76,27 +56,75 @@ def knn_accuracy(model, memory_data_loader, test_data_loader, device, k=5):
 
     return total_top1 / total_num * 100
 
-class InfoNCE_loss(nn.Module):
-    def __init__(self, temperature=0.2):
-        super().__init__()
+class InfoNCE(nn.Module):
+    def __init__(self, temperature=0.07):
+        super(InfoNCE, self).__init__()
         self.temperature = temperature
 
     def forward(self, query, keys, queue):
-        # query: (N, D)
-        # keys: (N, D)
-        # queue: (K, D)
+        query = F.normalize(query, dim=1)
+        keys = F.normalize(keys, dim=1)
 
-        N = query.shape[0]
+        # Positive logits
+        l_pos = torch.sum(query * keys, dim=1).unsqueeze(-1) # (N, 1)
 
-        l_pos = F.cosine_similarity(query.unsqueeze(1), keys.unsqueeze(0), dim=2) / self.temperature
-        l_pos = torch.diag(l_pos).unsqueeze(-1)  # (N, 1)
-
-        l_neg = F.cosine_similarity(query.unsqueeze(1), queue.unsqueeze(0), dim=2) / self.temperature
+        # Negative logits
+        l_neg = torch.einsum('nc,kc->nk', [query, queue])
 
         logits = torch.cat([l_pos, l_neg], dim=1)
 
-        labels = torch.zeros(N, dtype=torch.long, device=query.device)
+        logits /= self.temperature
+
+        labels = torch.zeros(logits.shape[0], dtype=torch.long).to(query.device)
 
         loss = F.cross_entropy(logits, labels)
+        return loss
+
+class NTXent(nn.Module):
+    def __init__(self, temperature):
+        super().__init__()
+        self.temperature = temperature
+
+    def forward(self, z_i, z_j):
+        batch_size = z_i.shape[0]
+        z = torch.cat([z_i, z_j], dim=0)
+
+        sim = torch.einsum('nc,mc->nm', F.normalize(z, dim=-1), F.normalize(z, dim=-1)) / self.temperature
+
+        labels = torch.arange(batch_size, device=z.device)
+        labels = torch.cat([labels + batch_size, labels])
+
+        sim = sim - torch.eye(sim.shape[0], device=sim.device) * 1e9
+
+        loss = F.cross_entropy(sim, labels)
 
         return loss
+
+def loss_byol(x, y):
+    x = F.normalize(x, dim=-1, p=2)
+    y = F.normalize(y, dim=-1, p=2)
+    return 2 - 2 * (x * y).sum(dim=-1)
+
+def loss_simsiam(x, y):
+    x = F.normalize(x, dim=-1, p=2)
+    y = F.normalize(y, dim=-1, p=2)
+    return -(x * y).sum(dim=-1)
+
+def loss_barlow_twins(z1, z2, lambda_param=5e-3):
+    batch_size = z1.size(0)
+    feature_dim = z1.size(1)
+
+    z1_norm = (z1 - z1.mean(dim=0)) / z1.std(dim=0)
+    z2_norm = (z2 - z2.mean(dim=0)) / z2.std(dim=0)
+
+    cross_corr = torch.matmul(z1_norm.T, z2_norm) / batch_size
+
+    on_diag = torch.diagonal(cross_corr).add_(-1).pow_(2).sum()
+    off_diag = off_diagonal(cross_corr).pow_(2).sum()
+
+    loss = on_diag + lambda_param * off_diag
+    return loss
+
+def off_diagonal(x):
+    n = x.shape[0]
+    return x.flatten()[:-1].view(n-1, n+1)[:, 1:].flatten()

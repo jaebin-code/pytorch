@@ -11,6 +11,7 @@ def supervised(model, device, epochs, batch_size, lr, wd, momemtum, logger, writ
     criterion = nn.CrossEntropyLoss()
 
     for epoch in range(epochs):
+        model.train()
         running_loss = 0.0
         for i, (inputs, labels) in enumerate(train_loader, 0):
             inputs, labels = inputs.to(device), labels.to(device)

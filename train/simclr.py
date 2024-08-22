@@ -1,4 +1,4 @@
-from train import get_datasets, knn_accuracy, NT_Xent_loss
+from train import get_datasets, knn_accuracy, NTXent
 import torch.optim as optim
 
 def train_simclr(model, train_loader, optimizer, criterion, scheduler, epochs, device, writer, memory_loader, test_loader):
@@ -34,6 +34,6 @@ def simclr(model, device, num_classes, pretrain_epochs, epochs, batch_size, lr, 
     model = model.to(device)
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
-    criterion = NT_Xent_loss(temperature).to(device)
+    criterion = NTXent(temperature).to(device)
 
     train_simclr(model, train_loader, optimizer, criterion, scheduler, epochs, device, writer, memory_loader, test_loader)

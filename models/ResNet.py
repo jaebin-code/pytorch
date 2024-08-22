@@ -9,7 +9,6 @@ class BasicBlock(nn.Module):
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.relu = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
         self.downsample = downsample
@@ -19,7 +18,7 @@ class BasicBlock(nn.Module):
 
         out = self.conv1(x)
         out = self.bn1(out)
-        out = self.relu(out)
+        out = F.relu(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
@@ -28,9 +27,10 @@ class BasicBlock(nn.Module):
             identity = self.downsample(x)
 
         out += identity
-        out = self.relu(out)
+        out = F.relu(out)
 
         return out
+
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -43,7 +43,6 @@ class Bottleneck(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * self.expansion)
-        self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
 
     def forward(self, x):
@@ -51,11 +50,11 @@ class Bottleneck(nn.Module):
 
         out = self.conv1(x)
         out = self.bn1(out)
-        out = self.relu(out)
+        out = F.relu(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
-        out = self.relu(out)
+        out = F.relu(out)
 
         out = self.conv3(out)
         out = self.bn3(out)
@@ -64,14 +63,16 @@ class Bottleneck(nn.Module):
             identity = self.downsample(x)
 
         out += identity
-        out = self.relu(out)
+        out = F.relu(out)
 
         return out
 
+
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes=10):
+    def __init__(self, block, layers, num_classes=1000):
         super(ResNet, self).__init__()
         self.in_planes = 64
+
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
@@ -129,37 +130,11 @@ class ResNet(nn.Module):
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
-
         return x
 
-class ResNet50(nn.Module):
-    def __init__(self, feature_dim=128, num_classes=10):
-        super(ResNet50, self).__init__()
-        self.backbone = ResNet(Bottleneck, [3, 4, 6, 3])
-        self.feature_dim = feature_dim
-        self.num_classes = num_classes
 
-        # 마지막 fully connected 레이어 제거
-        self.backbone.fc = nn.Identity()
+def ResNet50(num_classes=1000):
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes)
 
-        # 프로젝션 헤드 추가
-        self.projector = nn.Sequential(
-            nn.Linear(2048, 512),
-            nn.ReLU(),
-            nn.Linear(512, self.feature_dim)
-        )
-
-    def forward(self, x):
-        h = self.backbone(x)
-        z = self.projector(h)
-        return z
-
-    def extract_features(self, x):
-        return self.backbone.extract_features(x)
-
-    def set_downstream_classifier(self, device):
-        self.projector = nn.Sequential(
-                nn.Linear(2048, 512),
-                nn.ReLU(),
-                nn.Linear(512, self.num_classes)
-            ).to(device)
+def ResNet18(num_classes=10):
+    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes)
