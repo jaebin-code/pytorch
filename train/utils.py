@@ -128,3 +128,16 @@ def loss_barlow_twins(z1, z2, lambda_param=5e-3):
 def off_diagonal(x):
     n = x.shape[0]
     return x.flatten()[:-1].view(n-1, n+1)[:, 1:].flatten()
+
+def loss_separate(x, y, num_augmentations=5):
+
+    batch_size = x.size(0) // num_augmentations
+    num_classes = x.size(1)
+
+    x = x.view(num_augmentations, batch_size, num_classes)
+
+    avg_x = x.mean(dim=0)
+
+    loss = F.cross_entropy(avg_x, y)
+
+    return loss

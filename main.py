@@ -13,8 +13,8 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--dataset', type=str, required=True, choices=['CIFAR10', 'CIFAR100', 'SVHN', 'STL10'])
-    parser.add_argument('--model', type=str, required=True, choices=['ViT', 'ResNet'])
-    parser.add_argument('--train', type=str, default='Supervised', choices=['RotNet', 'SimCLR', 'Supervised', 'MoCo', 'BYOL', 'SimSiam', 'BarlowTwins'])
+    parser.add_argument('--model', type=str, required=True, choices=['ViT', 'ResNet', 'MLPMixer', 'ConvMixer'])
+    parser.add_argument('--train', type=str, default='Supervised', choices=['RotNet', 'SimCLR', 'Supervised', 'MoCo', 'BYOL', 'SimSiam', 'BarlowTwins', 'Separate'])
     parser.add_argument('--img_size', type=int, default=32)
     parser.add_argument('--patch_size', type=int, default=4)
     parser.add_argument('--in_channels', type=int, default=3)

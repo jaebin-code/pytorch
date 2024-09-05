@@ -93,7 +93,7 @@ def get_datasets(data_name='CIFAR10', train_method='Supervised', batch_size=64):
 
 
     # Dataset and Dataloader
-    train_dataset = CustomCIFAR10(root='./data', train=True, download=True, transform=transform1)
+    train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform1)
     memory_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_test)
     test_dataset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
 
@@ -102,3 +102,43 @@ def get_datasets(data_name='CIFAR10', train_method='Supervised', batch_size=64):
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
 
     return train_loader, memory_loader, test_loader
+
+def get_separate_datasets(data_name='CIFAR10', train_method='Supervised', batch_size=64):
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)),
+    ])
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))
+    ])
+
+    # CIFAR-10 데이터셋 로드
+    train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    memory_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_test)
+    test_dataset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
+    memory_loader = DataLoader(memory_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True)
+
+    return train_loader, memory_loader, test_loader
+
+
+def augment_batch(data, target):
+    augmentations = [
+        transforms.RandomResizedCrop(32),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomApply([transforms.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8),
+        transforms.RandomGrayscale(p=0.2),
+    ]
+    augmented_data = [data]
+    augmented_target = [target]
+
+    for aug in augmentations:
+        augmented_data.append(aug(data))
+        augmented_target.append(target)
+
+    return torch.cat(augmented_data, dim=0), torch.cat(augmented_target, dim=0)

@@ -5,7 +5,7 @@ from train import get_datasets
 
 def supervised(model, device, epochs, batch_size, lr, wd, momemtum, logger, writer, data_name):
     train_loader, memory_loader, test_loader = get_datasets(data_name=data_name, train_method="Supervised", batch_size=batch_size)
-
+    model.to(device)
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     criterion = nn.CrossEntropyLoss()
